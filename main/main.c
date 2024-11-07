@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: Unlicense OR CC0-1.0
- */
-
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "esp_log.h"
