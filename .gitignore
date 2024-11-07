@@ -10,3 +10,8 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
+.vscode
+build
+sdkconfig
+sdkconfig.old
+managed_components
