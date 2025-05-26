@@ -15,12 +15,10 @@
 #define TAG "USB_UART"
 
 #define EX_UART_NUM UART_NUM_1
-#define TXD_GPIO_NUM 2
-#define RXD_GPIO_NUM 1
-
+#define TxD 2 // esp okm
+#define RxD 1
 #define BUF_SIZE (4096)
 #define RD_BUF_SIZE (BUF_SIZE)
-
 static uint8_t buf[CONFIG_TINYUSB_CDC_RX_BUFSIZE + 1];
 
 static QueueHandle_t uart0_queue;
@@ -42,7 +40,6 @@ void tinyusb_cdc_rx_callback(int itf, cdcacm_event_t *event) {
   /* write back */
   // tinyusb_cdcacm_write_queue(itf, buf, rx_size);
   // tinyusb_cdcacm_write_flush(itf, 0);
-
   uart_write_bytes(EX_UART_NUM, (const char *)buf, rx_size);
 }
 
@@ -51,16 +48,6 @@ void tinyusb_cdc_line_state_changed_callback(int itf, cdcacm_event_t *event) {
   int rts = event->line_state_changed_data.rts;
   ESP_LOGI(TAG, "Line state changed on channel %d: DTR:%d, RTS:%d", itf, dtr,
            rts);
-  uint32_t bit_rate = event->line_coding_changed_data.p_line_coding->bit_rate;
-  uint8_t stop_bits = event->line_coding_changed_data.p_line_coding->stop_bits;
-  uint8_t parity = event->line_coding_changed_data.p_line_coding->parity;
-  uint8_t data_bits = event->line_coding_changed_data.p_line_coding->data_bits;
-  ESP_LOGI(TAG, "bit_rate:%ld: stop_bits:%d, parity:%d, data_bits:%d", bit_rate,
-           stop_bits, parity, data_bits);
-  uart_set_word_length(EX_UART_NUM, data_bits);
-  uart_set_stop_bits(EX_UART_NUM, stop_bits);
-  uart_set_parity(EX_UART_NUM, parity);
-  uart_set_baudrate(EX_UART_NUM, bit_rate);
 }
 
 static void uart_event_task(void *pvParameters) {
@@ -132,8 +119,7 @@ void uart_init() {
   uart_driver_install(EX_UART_NUM, BUF_SIZE * 2, BUF_SIZE * 2, 20, &uart0_queue,
                       0);
   uart_param_config(EX_UART_NUM, &uart_config);
-  uart_set_pin(EX_UART_NUM, TXD_GPIO_NUM, RXD_GPIO_NUM, UART_PIN_NO_CHANGE,
-               UART_PIN_NO_CHANGE);
+  uart_set_pin(EX_UART_NUM, TxD, RxD, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
   uart_pattern_queue_reset(EX_UART_NUM, 20);
 
   xTaskCreatePinnedToCore(uart_event_task, "uart_event_task", 4096 * 10, NULL,
@@ -142,11 +128,11 @@ void uart_init() {
 
 const char *device0_string_descriptor[] = {
     // array of pointer to string descriptors
-    (char[]){0x09, 0x04},     // 0: is supported language is English (0x0409)
-    "Techprogeny",            // 1: Manufacturer
-    "Esp32 USB to UART",      // 2: Product
-    "123456",                 // 3: Serials, should use chip ID
-    "Techprogeny CDC Device", // 4: CDC Interface
+    (char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
+    "Techprogeny",      // 1: Manufacturer
+    "ESP32 USB-to-UART",    // 2: Product
+    "123456",              // 3: Serials, should use chip ID
+    "Esp32 CDC Device",  // 4: CDC Interface
 };
 
 const tusb_desc_device_t device0_descriptor_dev = {
